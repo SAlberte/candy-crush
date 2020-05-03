@@ -10,6 +10,8 @@ colorama.init(wrap = False)
 os.system("cls")
 
 ## Contains hexagon with its colour and coordinates
+
+
 class Hexagon:
     colours = [Back.GREEN, Back.BLUE, Back.CYAN, Back.RED, Back.YELLOW, Back.MAGENTA, Back.LIGHTWHITE_EX, Back.BLACK]
     rst = Style.RESET_ALL
@@ -71,12 +73,21 @@ class Engine:
         self.rst = Style.RESET_ALL
         self.setPx = 0
         self.setPy = 0
+        self.isSet = False
         self.drawPlayer(False)
+        self.setsetPx = 0
+        self.setsetPy = 0
+        self.listOfNeighborsPairWise = [[-1,-1],[0,-1],[1,0],[0,1],[-1,1],[-1,0]]
+        self.listOfNeighborsOdd = [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,0]]
+        self.neighborindex = 0
         self.game()
 
     def drawPlayer(self, isErase):
         x = self.board.hexagonslist[self.setPy][self.setPx].x
         y = self.board.hexagonslist[self.setPy][self.setPx].y
+        if self.isSet:
+            x = self.board.hexagonslist[self.setsetPy][self.setsetPx].x
+            y = self.board.hexagonslist[self.setsetPy][self.setsetPx].y
         h = Back.BLACK if isErase else self.type
         sys.stdout.write("\x1b[%d;%dH" % (y, x))
         sys.stdout.flush()
@@ -123,31 +134,81 @@ class Engine:
     def movePlayer(self):
         x = 0
         y = 0
-        if keyboard.is_pressed('Left'):
-            y = -1
-            if self.setPy > 0:
-                self.drawPlayer(True)
-                self.setPy -=1
-                self.drawPlayer(False)
-        if keyboard.is_pressed('Right'):
-            y= 1
-            if self.setPy < len(self.board.hexagonslist)-1:
-                self.drawPlayer(True)
-                self.setPy += 1
-                self.drawPlayer(False)
-        if keyboard.is_pressed('Down'):
-            x =1
-            if self.setPx < len(self.board.hexagonslist[self.setPy])-1:
-                self.drawPlayer(True)
-                self.setPx += 1
-                self.drawPlayer(False)
-        if keyboard.is_pressed('Up'):
-            x = -1
-            if self.setPx > 0:
-                self.drawPlayer(True)
-                self.setPx -= 1
-                self.drawPlayer(False)
+        if not self.isSet:
+            if keyboard.is_pressed('Left'):
+                y = -1
+                if self.setPy > 0:
+                    self.drawPlayer(True)
+                    self.setPy -=1
+                    self.drawPlayer(False)
+            if keyboard.is_pressed('Right'):
+                y= 1
+                if self.setPy < len(self.board.hexagonslist)-1:
+                    self.drawPlayer(True)
+                    self.setPy += 1
+                    self.drawPlayer(False)
+            if keyboard.is_pressed('Down'):
+                x =1
+                if self.setPx < len(self.board.hexagonslist[self.setPy])-1:
+                    self.drawPlayer(True)
+                    self.setPx += 1
+                    self.drawPlayer(False)
+            if keyboard.is_pressed('Up'):
+                x = -1
+                if self.setPx > 0:
+                    self.drawPlayer(True)
+                    self.setPx -= 1
+                    self.drawPlayer(False)
+        else:
+            if keyboard.is_pressed('Left'):
+                self.findNeighbor(True)
+            if keyboard.is_pressed("Right"):
+                self.findNeighbor(False)
+        if keyboard.is_pressed("Space"):
+            self.isSet = True
+            self.findNeighbor(True)
 
+
+    def findNeighbor(self,isLeft):
+        n = 1
+        if isLeft: n = -1
+        self.neighborindex += n
+        if self.setPx % 2 == 1:
+            while True:
+                if self.neighborindex <= -1:
+                    self.neighborindex = 5
+                if self.neighborindex >= 6:
+                    self.neighborindex = 0
+                if self.setPx+self.listOfNeighborsOdd[self.neighborindex][1] >= 0 and\
+                self.setPx + self.listOfNeighborsOdd[self.neighborindex][1] < len(self.board.hexagonslist[self.setPx])\
+                and self.setPy + self.listOfNeighborsOdd[self.neighborindex][0]>= 0 and\
+                self.setPy + self.listOfNeighborsOdd[self.neighborindex][0] < len(self.board.hexagonslist):
+                    self.drawPlayer(True)
+                    self.setsetPx =self.setPx+self.listOfNeighborsOdd[self.neighborindex][1]
+                    self.setsetPy =self.setPy+self.listOfNeighborsOdd[self.neighborindex][0]
+                    self.drawPlayer(False)
+                    break
+                else:
+                    self.neighborindex += n
+                    continue
+        else:
+            while True:
+                if self.neighborindex <= -1:
+                    self.neighborindex = 5
+                if self.neighborindex >= 6:
+                    self.neighborindex = 0
+                if self.setPx+self.listOfNeighborsPairWise[self.neighborindex][1] >= 0 and\
+                self.setPx + self.listOfNeighborsPairWise[self.neighborindex][1] < len(self.board.hexagonslist[self.setPx])\
+                and self.setPy + self.listOfNeighborsPairWise[self.neighborindex][0]>= 0 and\
+                self.setPy + self.listOfNeighborsPairWise[self.neighborindex][0] < len(self.board.hexagonslist):
+                    self.drawPlayer(True)
+                    self.setsetPx =self.setPx+self.listOfNeighborsPairWise[self.neighborindex][1]
+                    self.setsetPy =self.setPy+self.listOfNeighborsPairWise[self.neighborindex][0]
+                    self.drawPlayer(False)
+                    break
+                else:
+                    self.neighborindex += n
+                    continue
 
     def game(self):
         while True:
