@@ -1,3 +1,4 @@
+from copy import copy
 from time import sleep
 import colorama
 import os
@@ -19,13 +20,13 @@ class Hexagon:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.initialization()
+        self.isEmpty = False
+        self.type = self.colours[random.randint(0, 6)]
         self.draw()
 
-    def initialization(self):
-        self.type = self.colours[random.randint(0, 6)]
-
     def draw(self):
+        if self.isEmpty:
+            self.type = self.colours[-1]
         sys.stdout.write("\x1b[%d;%dH" % (self.y, self.x+1))
         sys.stdout.flush()
         sys.stdout.write(self.type + " " + self.rst)
@@ -74,6 +75,7 @@ class Engine:
         self.setPx = 0
         self.setPy = 0
         self.isSet = False
+        self.isSpacePressed = False
         self.drawPlayer(False)
         self.setsetPx = 0
         self.setsetPy = 0
@@ -81,6 +83,45 @@ class Engine:
         self.listOfNeighborsOdd = [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,0]]
         self.neighborindex = 0
         self.game()
+
+    def eraseHexagons(self):
+        list = [self.findHexagonsToErase(self.setsetPy, self.setsetPx), self.findHexagonsToErase(self.setPy, self.setPx)]
+        for l in list:
+            for j in range(0, 3):
+                if len(l[j])+len(l[j+3])-2 >= 2:
+                    for x in l[j]:
+                        self.board.hexagonslist[x[0]][x[1]].isEmpty = True
+                        self.board.hexagonslist[x[0]][x[1]].draw()
+                    for x in l[j+3]:
+                        self.board.hexagonslist[x[0]][x[1]].isEmpty = True
+                        self.board.hexagonslist[x[0]][x[1]].draw()
+
+
+    def findHexagonsToErase(self,y,x):
+        listToErase1 = []
+        odd = self.listOfNeighborsOdd
+        pair = self.listOfNeighborsPairWise
+        for i in range(len(self.listOfNeighborsOdd)):
+            helperCoords = [y, x]
+            listToErase1.append([])
+            listToErase1[-1].append(copy(helperCoords))
+            while True:
+                l = pair
+                if helperCoords[1] % 2 == 1:  #for odd rows
+                    l = odd
+                if helperCoords[1]+l[i][1] >= 0 and\
+                helperCoords[1] + l[i][1] < len(self.board.hexagonslist[helperCoords[1]])\
+                and helperCoords[0] + l[i][0]>= 0 and\
+                helperCoords[0] + l[i][0] < len(self.board.hexagonslist):
+                    if self.board.hexagonslist[helperCoords[0]+l[i][0]][helperCoords[1]+l[i][1]].type == self.board.hexagonslist[y][x].type\
+                            and not self.board.hexagonslist[helperCoords[0]+l[i][0]][helperCoords[1]+l[i][1]].isEmpty:
+                        helperCoords[1] += l[i][1]
+                        helperCoords[0] += l[i][0]
+                        listToErase1[-1].append(copy(helperCoords))
+                    else: break
+                else: break
+        return listToErase1
+
 
     def drawPlayer(self, isErase):
         x = self.board.hexagonslist[self.setPy][self.setPx].x
@@ -129,7 +170,7 @@ class Engine:
         sys.stdout.flush()
         sys.stdout.write(h + " " + self.rst)
         sys.stdout.flush()
-        sleep(0.025)
+        sleep(0.03)
 
     def movePlayer(self):
         x = 0
@@ -165,8 +206,26 @@ class Engine:
             if keyboard.is_pressed("Right"):
                 self.findNeighbor(False)
         if keyboard.is_pressed("Space"):
+            if not self.isSpacePressed and self.isSet:
+                self.swap()
+                return
+            self.isSpacePressed = True
             self.isSet = True
             self.findNeighbor(True)
+        else: self.isSpacePressed = False
+
+    def swap(self):
+        self.drawPlayer(True)
+        self.isSet = False
+        sleep(0.5)
+        auto = self.board.hexagonslist[self.setsetPy][self.setsetPx].type
+        self.board.hexagonslist[self.setsetPy][self.setsetPx].type = self.board.hexagonslist[self.setPy][self.setPx].type
+        self.board.hexagonslist[self.setPy][self.setPx].type = auto
+        self.board.hexagonslist[self.setsetPy][self.setsetPx].draw()
+        self.board.hexagonslist[self.setPy][self.setPx].draw()
+        sleep(0.3)
+        self.eraseHexagons()
+        sleep(0.6)
 
 
     def findNeighbor(self,isLeft):
@@ -213,8 +272,6 @@ class Engine:
     def game(self):
         while True:
             self.movePlayer()
-
-
 
 
 start = Engine()
