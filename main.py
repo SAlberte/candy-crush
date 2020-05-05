@@ -166,12 +166,10 @@ class Engine:
                     self.board.hexagonslist[x][y].draw()
                     self.board.hexagonslist[x+l[3][0]][y+l[3][1]].draw()
                     isChanged = True
+            if self.infinitMode(): isChanged = True
             sleep(0.005)
 
         return isChanged
-
-                    
-                
 
     def drawPlayer(self, isErase):
         x = self.board.hexagonslist[self.setPy][self.setPx].x
@@ -256,7 +254,9 @@ class Engine:
             if keyboard.is_pressed("Right"):
                 self.findNeighbor(False)
         if keyboard.is_pressed("Space"):
+            if self.board.hexagonslist[self.setPy][self.setPx].isEmpty: return
             if not self.isSpacePressed and self.isSet:
+                if self.board.hexagonslist[self.setsetPy][self.setsetPx].isEmpty: return
                 self.swap()
                 return
             self.isSpacePressed = True
@@ -277,6 +277,17 @@ class Engine:
         self.eraseHexagonsbyPlayer()
         sleep(0.6)
         self.prepareMap()
+
+
+    def infinitMode(self):
+        ischanged = False
+        for x in range(0,self.board.x):
+            if self.board.hexagonslist[x][0].isEmpty:
+                self.board.hexagonslist[x][0].isEmpty = False
+                self.board.hexagonslist[x][0].type = self.board.hexagonslist[x][0].colours[random.randint(0,6)]
+                self.board.hexagonslist[x][0].draw()
+                ischanged = True
+        return ischanged
 
 
     def findNeighbor(self,isLeft):
