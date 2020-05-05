@@ -83,8 +83,9 @@ class Engine:
         self.listOfNeighborsOdd = [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,0]]
         self.neighborindex = 0
         self.game()
+        
 
-    def eraseHexagons(self):
+    def eraseHexagonsbyPlayer(self):
         list = [self.findHexagonsToErase(self.setsetPy, self.setsetPx), self.findHexagonsToErase(self.setPy, self.setPx)]
         for l in list:
             for j in range(0, 3):
@@ -95,6 +96,19 @@ class Engine:
                     for x in l[j+3]:
                         self.board.hexagonslist[x[0]][x[1]].isEmpty = True
                         self.board.hexagonslist[x[0]][x[1]].draw()
+
+    def eraseHexagons(self):
+        for x in range(0,self.board.y):
+            for y in range(0,self.board.x):
+                f = self.findHexagonsToErase(y,x)
+                for j in range(0, 3):
+                    if len(f[j]) + len(f[j+3]) - 2 >= 2:
+                        for p in f[j]:
+                            self.board.hexagonslist[p[0]][p[1]].isEmpty = True
+                            self.board.hexagonslist[p[0]][p[1]].draw()
+                        for p in f[j + 3]:
+                            self.board.hexagonslist[p[0]][p[1]].isEmpty = True
+                            self.board.hexagonslist[p[0]][p[1]].draw()
 
 
     def findHexagonsToErase(self,y,x):
@@ -122,6 +136,42 @@ class Engine:
                 else: break
         return listToErase1
 
+
+    def prepareMap(self):
+        self.eraseHexagons()
+        while self.gravity():
+            sleep(0.3)
+            self.eraseHexagons()
+            sleep(0.3)
+        
+        
+    def gravity(self):
+        isChanged = False
+        for y in range(self.board.y-2,-1,-1):
+            for x in range(0,self.board.x):
+                if self.board.hexagonslist[x][y].isEmpty: continue
+                l = self.listOfNeighborsPairWise
+                if x % 2 == 1: l = self.listOfNeighborsOdd
+                if x != 0 and self.board.hexagonslist[x+l[4][0]][y+l[4][1]].isEmpty:
+                    self.board.hexagonslist[x][y].isEmpty = True
+                    self.board.hexagonslist[x+l[4][0]][y+l[4][1]].isEmpty = False
+                    self.board.hexagonslist[x+l[4][0]][y+l[4][1]].type = self.board.hexagonslist[x][y].type
+                    self.board.hexagonslist[x][y].draw()
+                    self.board.hexagonslist[x+l[4][0]][y+l[4][1]].draw()
+                    isChanged = True
+                elif x != self.board.x-1 and self.board.hexagonslist[x+l[3][0]][y+l[3][1]].isEmpty:
+                    self.board.hexagonslist[x][y].isEmpty = True
+                    self.board.hexagonslist[x+l[3][0]][y+l[3][1]].isEmpty = False
+                    self.board.hexagonslist[x+l[3][0]][y+l[3][1]].type = self.board.hexagonslist[x][y].type
+                    self.board.hexagonslist[x][y].draw()
+                    self.board.hexagonslist[x+l[3][0]][y+l[3][1]].draw()
+                    isChanged = True
+            sleep(0.005)
+
+        return isChanged
+
+                    
+                
 
     def drawPlayer(self, isErase):
         x = self.board.hexagonslist[self.setPy][self.setPx].x
@@ -224,8 +274,9 @@ class Engine:
         self.board.hexagonslist[self.setsetPy][self.setsetPx].draw()
         self.board.hexagonslist[self.setPy][self.setPx].draw()
         sleep(0.3)
-        self.eraseHexagons()
+        self.eraseHexagonsbyPlayer()
         sleep(0.6)
+        self.prepareMap()
 
 
     def findNeighbor(self,isLeft):
@@ -270,6 +321,7 @@ class Engine:
                     continue
 
     def game(self):
+        self.prepareMap()
         while True:
             self.movePlayer()
 
