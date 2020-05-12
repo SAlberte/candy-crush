@@ -337,4 +337,4 @@ class Engine:
             self.movePlayer()
 
 #uncomment to start game in terminal
-#start = Engine()
+start = Engine()
