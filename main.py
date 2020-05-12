@@ -336,5 +336,5 @@ class Engine:
         while True:
             self.movePlayer()
 
-
-start = Engine()
+#uncomment to start game in terminal
+#start = Engine()
