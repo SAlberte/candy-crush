@@ -12,6 +12,9 @@ class Window(QWidget):
         self.setGeometry(300, 300, 900, 600)
         self.setMinimumHeight(600)
         self.setMinimumWidth(600)
+        self.scene = QGraphicsScene()
+        self.view = QGraphicsView(self.scene,self)
+        self.view.setGeometry(130, 10, 700, 400)
         self.isGame = False
         self.is2PlayerMode = False
         self.wasFirstSettling = False
@@ -28,26 +31,24 @@ class Window(QWidget):
 
     def setLabel(self):
         self.label = QLabel(self)
-        self.label.setFont("TimesNewRoman")
-        self.label.move(20, 300)
+        self.label.move(20, 450)
         self.label.setText("STEERING WITH ARROW KEYS \n SELECT WITH ENTER KEY")
         self.labelplayer1 = QLabel(self)
-        self.labelplayer1.setFont("TimesNewRoman")
-        self.labelplayer1.move(300,400)
-        self.labelplayer1.setText("PLAYER 1 SCORE : ")
+        self.labelplayer1.move(300,450)
+        self.labelplayer1.setText("PLAYER 1 SCORE :              ")
         self.labelplayer2 = QLabel(self)
-        self.labelplayer2.setFont("TimesNewRoman")
-        self.labelplayer2.move(500, 400)
-        self.labelplayer2.setText("PLAYER 2 SCORE : ")
+        self.labelplayer2.move(500, 450)
+        self.labelplayer2.setText("PLAYER 2 SCORE :              ")
+
 
 
 
     def setButtons(self):
         self.btn2player = QPushButton("2 PLAYER MODE", self)
         self.btnstart = QPushButton("START", self)
-        self.btnstart.move(50, 50)
+        self.btnstart.move(20, 50)
         self.btnstop = QPushButton("EXIT", self)
-        self.btnstop.move(50, 150)
+        self.btnstop.move(20, 150)
         self.btnstop.clicked.connect(self.quitApp)
         self.btnstart.clicked.connect(self.StartGame)
         self.btnstart.setAutoDefault(False)
@@ -56,7 +57,7 @@ class Window(QWidget):
         self.btnstart.setStyleSheet("background-color: #66ffff")
         self.btnstop.setStyleSheet("background-color: #66ffff")
         self.btn2player.setStyleSheet("background-color: #66ffff")
-        self.btn2player.move(50, 100)
+        self.btn2player.move(20, 100)
         self.btn2player.clicked.connect(self.player2StartGame)
         
 
@@ -71,7 +72,8 @@ class Window(QWidget):
         self.wasFirstSettling = False
         self.player1score = 0
         self.player2score = 0
-        self.repaint()
+        #self.repaint()
+        self.show()
         self.btnstart.setText("NEW GAME")
         self.isGame = True
         self.engine = Engine()
@@ -91,41 +93,48 @@ class Window(QWidget):
         self.timer.start()
 
 
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
+    def paint(self):
+
+        #painter = QPainter(self)
+        #painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
 
         #point = QPolygon([QPoint(10,10), QPoint(20, 10),QPoint(20, 20),QPoint(10, 20)])
         #painter.setBrush(QBrush(Qt.red, Qt.SolidPattern))
         #painter.drawPolygon(points)
         #Draw board with hexagons
+        self.scene.clear()
         if self.isGame:
             for indi,i in enumerate(self.engine.board.hexagonslist):
                 for ind,j in enumerate(i):
-                    painter.setBrush(QBrush(self.getColour(j), Qt.SolidPattern))
-                    xpom = j.x*8+200
+                    #painter.setBrush(QBrush(self.getColour(j), Qt.SolidPattern))
+                    xpom = j.x*8
                     ypom = j.y*8
-                    points = QPolygon([QPoint(xpom+16,ypom), QPoint(xpom+32,ypom+10),QPoint(xpom+32,ypom+22),QPoint(xpom+16,ypom+32),QPoint(xpom,ypom+22), QPoint(xpom,ypom+10)])
-                    painter.drawPolygon(points)
+                    points = QPolygonF([QPoint(xpom+16,ypom), QPoint(xpom+32,ypom+10),QPoint(xpom+32,ypom+22),QPoint(xpom+16,ypom+32),QPoint(xpom,ypom+22), QPoint(xpom,ypom+10)])
+                    self.scene.addPolygon(points,QPen(Qt.white, 3, Qt.SolidLine),QBrush(self.getColour(j), Qt.SolidPattern))
+                    #painter.drawPolygon(points)
         #Draw player handles on board
             painter2 = QPainter(self)
             painter2.setPen(QPen(Qt.black,4,Qt.SolidLine))
 
             x = self.engine.board.hexagonslist[self.engine.setPy][self.engine.setPx].x
             y = self.engine.board.hexagonslist[self.engine.setPy][self.engine.setPx].y
-            xpom = x * 8 + 200
+            xpom = x * 8
             ypom = y * 8
-            points = QPolygon([QPoint(xpom + 16, ypom), QPoint(xpom + 32, ypom + 10), QPoint(xpom + 32, ypom + 22),
+            points = QPolygonF([QPoint(xpom + 16, ypom), QPoint(xpom + 32, ypom + 10), QPoint(xpom + 32, ypom + 22),
                                QPoint(xpom + 16, ypom + 32), QPoint(xpom, ypom + 22), QPoint(xpom, ypom + 10)])
-            painter2.drawPolygon(points)
+            self.scene.addPolygon(points,QPen(Qt.black,4,Qt.SolidLine), QBrush())
+            #painter2.drawPolygon(points)
             if self.engine.isSet:
                 x = self.engine.board.hexagonslist[self.engine.setsetPy][self.engine.setsetPx].x
                 y = self.engine.board.hexagonslist[self.engine.setsetPy][self.engine.setsetPx].y
-                xpom = x * 8 + 200
+                xpom = x * 8
                 ypom = y * 8
-                points = QPolygon([QPoint(xpom + 16, ypom), QPoint(xpom + 32, ypom + 10), QPoint(xpom + 32, ypom + 22),
+                points = QPolygonF([QPoint(xpom + 16, ypom), QPoint(xpom + 32, ypom + 10), QPoint(xpom + 32, ypom + 22),
                                    QPoint(xpom + 16, ypom + 32), QPoint(xpom, ypom + 22), QPoint(xpom, ypom + 10)])
-                painter2.drawPolygon(points)
+                self.scene.addPolygon(points,
+                                      QPen(Qt.black, 4, Qt.SolidLine), QBrush())
+                #painter2.drawPolygon(points)
+                self.scene.update()
 
 
 
@@ -160,9 +169,12 @@ class Window(QWidget):
                 if isPlayer1:   self.player1score+=score
                 else: self.player2score += score
             else: self.player1score += score
-            self.labelplayer1.setText("PLAYER 1 SCORE : %d" % self.player1score)
-            self.labelplayer2.setText("PLAYER 2 SCORE : %d" % self.player2score)
-        self.repaint()
+            self.labelplayer1.setText(f"PLAYER 1 SCORE : {self.player1score}   ")
+            self.labelplayer2.setText(f"PlAYER 2 SCORE : {self.player2score}    ")
+            self.labelplayer1.update()
+            self.labelplayer2.update()
+
+        self.paint()
         
 
 
