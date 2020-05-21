@@ -27,8 +27,6 @@ class Window(QWidget):
         self.setButtons()
 
 
-
-
     def setLabel(self):
         self.label = QLabel(self)
         self.label.move(20, 450)
@@ -73,7 +71,7 @@ class Window(QWidget):
         self.player1score = 0
         self.player2score = 0
         #self.repaint()
-        self.show()
+        #self.show()
         self.btnstart.setText("NEW GAME")
         self.isGame = True
         self.engine = Engine()
@@ -94,28 +92,15 @@ class Window(QWidget):
 
 
     def paint(self):
-
-        #painter = QPainter(self)
-        #painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
-
-        #point = QPolygon([QPoint(10,10), QPoint(20, 10),QPoint(20, 20),QPoint(10, 20)])
-        #painter.setBrush(QBrush(Qt.red, Qt.SolidPattern))
-        #painter.drawPolygon(points)
-        #Draw board with hexagons
         self.scene.clear()
         if self.isGame:
             for indi,i in enumerate(self.engine.board.hexagonslist):
                 for ind,j in enumerate(i):
-                    #painter.setBrush(QBrush(self.getColour(j), Qt.SolidPattern))
                     xpom = j.x*8
                     ypom = j.y*8
                     points = QPolygonF([QPoint(xpom+16,ypom), QPoint(xpom+32,ypom+10),QPoint(xpom+32,ypom+22),QPoint(xpom+16,ypom+32),QPoint(xpom,ypom+22), QPoint(xpom,ypom+10)])
                     self.scene.addPolygon(points,QPen(Qt.white, 3, Qt.SolidLine),QBrush(self.getColour(j), Qt.SolidPattern))
-                    #painter.drawPolygon(points)
         #Draw player handles on board
-            painter2 = QPainter(self)
-            painter2.setPen(QPen(Qt.black,4,Qt.SolidLine))
-
             x = self.engine.board.hexagonslist[self.engine.setPy][self.engine.setPx].x
             y = self.engine.board.hexagonslist[self.engine.setPy][self.engine.setPx].y
             xpom = x * 8
@@ -123,7 +108,6 @@ class Window(QWidget):
             points = QPolygonF([QPoint(xpom + 16, ypom), QPoint(xpom + 32, ypom + 10), QPoint(xpom + 32, ypom + 22),
                                QPoint(xpom + 16, ypom + 32), QPoint(xpom, ypom + 22), QPoint(xpom, ypom + 10)])
             self.scene.addPolygon(points,QPen(Qt.black,4,Qt.SolidLine), QBrush())
-            #painter2.drawPolygon(points)
             if self.engine.isSet:
                 x = self.engine.board.hexagonslist[self.engine.setsetPy][self.engine.setsetPx].x
                 y = self.engine.board.hexagonslist[self.engine.setsetPy][self.engine.setsetPx].y
@@ -133,10 +117,6 @@ class Window(QWidget):
                                    QPoint(xpom + 16, ypom + 32), QPoint(xpom, ypom + 22), QPoint(xpom, ypom + 10)])
                 self.scene.addPolygon(points,
                                       QPen(Qt.black, 4, Qt.SolidLine), QBrush())
-                #painter2.drawPolygon(points)
-                self.scene.update()
-
-
 
 
     def getColour(self,j):

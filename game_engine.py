@@ -28,22 +28,7 @@ class Hexagon:
     def draw(self):
         if self.isEmpty:
             self.type = self.colours[-1]
-        sys.stdout.write("\x1b[%d;%dH" % (self.y, self.x + 1))
-        sys.stdout.flush()
-        sys.stdout.write(self.type + " " + self.rst)
-        sys.stdout.flush()
-        sys.stdout.write("\x1b[%d;%dH" % (self.y + 1, self.x))
-        sys.stdout.flush()
-        sys.stdout.write(self.type + " " + self.rst + self.type + " " + self.rst + self.type + " " + self.rst)
-        sys.stdout.flush()
-        sys.stdout.write("\x1b[%d;%dH" % (self.y + 2, self.x))
-        sys.stdout.flush()
-        sys.stdout.write(self.type + " " + self.rst + self.type + " " + self.rst + self.type + " " + self.rst)
-        sys.stdout.flush()
-        sys.stdout.write("\x1b[%d;%dH" % (self.y + 3, self.x + 1))
-        sys.stdout.flush()
-        sys.stdout.write(self.type + " " + self.rst)
-        sys.stdout.flush()
+
 
 
 ## Class that creates list of hexagon, arranged in grid
@@ -183,46 +168,6 @@ class Engine:
             x = self.board.hexagonslist[self.setsetPy][self.setsetPx].x
             y = self.board.hexagonslist[self.setsetPy][self.setsetPx].y
         h = Back.BLACK if isErase else self.type
-        sys.stdout.write("\x1b[%d;%dH" % (y, x))
-        sys.stdout.flush()
-        sys.stdout.write(h + " " + self.rst)
-        sys.stdout.flush()
-        sys.stdout.write("\x1b[%d;%dH" % (y - 1, x + 1))
-        sys.stdout.flush()
-        sys.stdout.write(h + " " + self.rst)
-        sys.stdout.flush()
-        sys.stdout.write("\x1b[%d;%dH" % (y, x + 2))
-        sys.stdout.flush()
-        sys.stdout.write(h + " " + self.rst)
-        sys.stdout.flush()
-        sys.stdout.write("\x1b[%d;%dH" % (y + 1, x + 3))
-        sys.stdout.flush()
-        sys.stdout.write(h + " " + self.rst)
-        sys.stdout.flush()
-        sys.stdout.write("\x1b[%d;%dH" % (y + 2, x + 3))
-        sys.stdout.flush()
-        sys.stdout.write(h + " " + self.rst)
-        sys.stdout.flush()
-        sys.stdout.write("\x1b[%d;%dH" % (y + 3, x + 2))
-        sys.stdout.flush()
-        sys.stdout.write(h + " " + self.rst)
-        sys.stdout.flush()
-        sys.stdout.write("\x1b[%d;%dH" % (y + 4, x + 1))
-        sys.stdout.flush()
-        sys.stdout.write(h + " " + self.rst)
-        sys.stdout.flush()
-        sys.stdout.write("\x1b[%d;%dH" % (y + 3, x))
-        sys.stdout.flush()
-        sys.stdout.write(h + " " + self.rst)
-        sys.stdout.flush()
-        sys.stdout.write("\x1b[%d;%dH" % (y + 2, x - 1))
-        sys.stdout.flush()
-        sys.stdout.write(h + " " + self.rst)
-        sys.stdout.flush()
-        sys.stdout.write("\x1b[%d;%dH" % (y + 1, x - 1))
-        sys.stdout.flush()
-        sys.stdout.write(h + " " + self.rst)
-        sys.stdout.flush()
 
 
     def infinitMode(self):
