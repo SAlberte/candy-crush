@@ -151,6 +151,13 @@ class Window(QWidget):
             else: self.player1score += score
             self.labelplayer1.setText(f"PLAYER 1 SCORE : {self.player1score}   ")
             self.labelplayer2.setText(f"PlAYER 2 SCORE : {self.player2score}    ")
+            if self.is2PlayerMode:
+                if isPlayer1:
+                    self.labelplayer2.setStyleSheet('color: red')
+                    self.labelplayer1.setStyleSheet('color: black')
+                else :
+                    self.labelplayer1.setStyleSheet('color: red')
+                    self.labelplayer2.setStyleSheet('color: black')
             self.labelplayer1.update()
             self.labelplayer2.update()
 
