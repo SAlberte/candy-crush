@@ -23,9 +23,10 @@ class Window(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.gameLoop)
         self.timer.setInterval(50)
+        self.setTextBox()
         self.setLabel()
         self.setButtons()
-
+        self.enemyIP = 0
 
     def setLabel(self):
         self.label = QLabel(self)
@@ -38,27 +39,48 @@ class Window(QWidget):
         self.labelplayer2.move(500, 450)
         self.labelplayer2.setText("PLAYER 2 SCORE :              ")
 
-
-
+    def setTextBox(self):
+        self.textbox = QLineEdit(self)
+        self.textbox.move(20,200)
+        self.textbox.resize(100,40)
+        self.textbox.setPlaceholderText(" IP ADDRESS")
 
     def setButtons(self):
+        #button for 2 player mode
         self.btn2player = QPushButton("2 PLAYER MODE", self)
-        self.btnstart = QPushButton("START", self)
-        self.btnstart.move(20, 50)
-        self.btnstop = QPushButton("EXIT", self)
-        self.btnstop.move(20, 150)
-        self.btnstop.clicked.connect(self.quitApp)
-        self.btnstart.clicked.connect(self.StartGame)
-        self.btnstart.setAutoDefault(False)
-        self.btnstop.setAutoDefault(False)
         self.btn2player.setAutoDefault(False)
-        self.btnstart.setStyleSheet("background-color: #66ffff")
-        self.btnstop.setStyleSheet("background-color: #66ffff")
         self.btn2player.setStyleSheet("background-color: #66ffff")
         self.btn2player.move(20, 100)
         self.btn2player.clicked.connect(self.player2StartGame)
         
+        #button for one player mode
+        self.btnstart = QPushButton("START", self)
+        self.btnstart.move(20, 50)
+        self.btnstart.setAutoDefault(False)
+        self.btnstart.setStyleSheet("background-color: #66ffff")
+        self.btnstart.clicked.connect(self.StartGame)
+        
+        #button to exit program
+        self.btnstop = QPushButton("EXIT", self)
+        self.btnstop.setAutoDefault(False)
+        self.btnstop.setStyleSheet("background-color: #66ffff")        
+        self.btnstop.move(20, 150)
+        self.btnstop.clicked.connect(self.quitApp)
+        
+        #button to join online player
+        self.btnjoin = QPushButton("JOIN PLAYER", self)
+        self.btnjoin.setAutoDefault(False)
+        self.btnjoin.setStyleSheet("background-color: #66ffff")
+        self.btnjoin.move(20, 250)
+        self.btnjoin.clicked.connect(self.quitApp)
 
+        # button to create room for online player
+        self.btnjoin = QPushButton("CREATE ROOM", self)
+        self.btnjoin.setAutoDefault(False)
+        self.btnjoin.setStyleSheet("background-color: #66ffff")
+        self.btnjoin.move(20, 300)
+        self.btnjoin.clicked.connect(self.quitApp)
+       
 
     def quitApp(self):
         myApp.quit()
