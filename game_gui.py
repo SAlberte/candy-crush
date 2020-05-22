@@ -2,6 +2,9 @@ from game_engine import Engine, Hexagon, Board
 from PySide2.QtWidgets import *
 from PySide2.QtGui import *
 from PySide2.QtCore import *
+import threading
+import socket
+import pickle
 import sys
 
 class Window(QWidget):
@@ -26,6 +29,7 @@ class Window(QWidget):
         self.setTextBox()
         self.setLabel()
         self.setButtons()
+        self.isEnemyTurn = False
         self.enemyIP = 0
 
     def setLabel(self):
@@ -72,15 +76,73 @@ class Window(QWidget):
         self.btnjoin.setAutoDefault(False)
         self.btnjoin.setStyleSheet("background-color: #66ffff")
         self.btnjoin.move(20, 250)
-        self.btnjoin.clicked.connect(self.quitApp)
+        self.btnjoin.clicked.connect(self.joinRoom)
 
         # button to create room for online player
         self.btnjoin = QPushButton("CREATE ROOM", self)
         self.btnjoin.setAutoDefault(False)
         self.btnjoin.setStyleSheet("background-color: #66ffff")
         self.btnjoin.move(20, 300)
-        self.btnjoin.clicked.connect(self.quitApp)
+        self.btnjoin.clicked.connect(self.createRoom)
        
+    def createRoom(self):
+        self.isEnemyTurn = True
+        t = threading.Thread(target=self.recieveBoard,args=(self.isEnemyTurn, self.engine.board.hexagonslist,))
+        t.start()
+        #t.join()
+
+    def joinRoom(self):
+        self.sendBoard()
+
+    def sendBoard(self):
+        # Create a TCP/IP socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_address = (self.textbox.text(), 10061)
+
+        sock.connect(server_address)
+
+        try:
+
+            # Send data
+            # message = b"This is our message. It is very long but will only be transmitted in chunks of 16 at a time"
+            n = self.engine.board.hexagonslist
+            message = pickle.dumps(n)
+            # print('sending {!r}'.format(message))
+            sock.send(message)
+
+        finally:
+            print('closing socket')
+            sock.close()
+
+    def recieveBoard(self, isEnemy, board):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        server_address = ('localhost', 10061)
+        sock.bind(server_address)
+        sock.listen(1)
+
+
+        print("waiting for connection")
+        connection, client_address = sock.accept()
+        try:
+            print("connection from", client_address)
+
+            while True:
+                data = connection.recv(100000)
+
+                if data:
+                    self.engine.board.hexagonslist = pickle.loads(data)
+                    print("odebrano mape")
+                else:
+                    print("skonczono odbierac mape", client_address)
+                    self.isEnemyTurn = False
+                    break
+
+        finally:
+
+            print("Closing current connectoin")
+            connection.close()
+            self.isEnemyTurn = False
 
     def quitApp(self):
         myApp.quit()
@@ -114,31 +176,32 @@ class Window(QWidget):
 
 
     def paint(self):
-        self.scene.clear()
-        if self.isGame:
-            for indi,i in enumerate(self.engine.board.hexagonslist):
-                for ind,j in enumerate(i):
-                    xpom = j.x*8
-                    ypom = j.y*8
-                    points = QPolygonF([QPoint(xpom+16,ypom), QPoint(xpom+32,ypom+10),QPoint(xpom+32,ypom+22),QPoint(xpom+16,ypom+32),QPoint(xpom,ypom+22), QPoint(xpom,ypom+10)])
-                    self.scene.addPolygon(points,QPen(Qt.white, 3, Qt.SolidLine),QBrush(self.getColour(j), Qt.SolidPattern))
-        #Draw player handles on board
-            x = self.engine.board.hexagonslist[self.engine.setPy][self.engine.setPx].x
-            y = self.engine.board.hexagonslist[self.engine.setPy][self.engine.setPx].y
-            xpom = x * 8
-            ypom = y * 8
-            points = QPolygonF([QPoint(xpom + 16, ypom), QPoint(xpom + 32, ypom + 10), QPoint(xpom + 32, ypom + 22),
-                               QPoint(xpom + 16, ypom + 32), QPoint(xpom, ypom + 22), QPoint(xpom, ypom + 10)])
-            self.scene.addPolygon(points,QPen(Qt.black,4,Qt.SolidLine), QBrush())
-            if self.engine.isSet:
-                x = self.engine.board.hexagonslist[self.engine.setsetPy][self.engine.setsetPx].x
-                y = self.engine.board.hexagonslist[self.engine.setsetPy][self.engine.setsetPx].y
+        if not self.isEnemyTurn:
+            self.scene.clear()
+            if self.isGame:
+                for indi,i in enumerate(self.engine.board.hexagonslist):
+                    for ind,j in enumerate(i):
+                        xpom = j.x*8
+                        ypom = j.y*8
+                        points = QPolygonF([QPoint(xpom+16,ypom), QPoint(xpom+32,ypom+10),QPoint(xpom+32,ypom+22),QPoint(xpom+16,ypom+32),QPoint(xpom,ypom+22), QPoint(xpom,ypom+10)])
+                        self.scene.addPolygon(points,QPen(Qt.white, 3, Qt.SolidLine),QBrush(self.getColour(j), Qt.SolidPattern))
+            #Draw player handles on board
+                x = self.engine.board.hexagonslist[self.engine.setPy][self.engine.setPx].x
+                y = self.engine.board.hexagonslist[self.engine.setPy][self.engine.setPx].y
                 xpom = x * 8
                 ypom = y * 8
                 points = QPolygonF([QPoint(xpom + 16, ypom), QPoint(xpom + 32, ypom + 10), QPoint(xpom + 32, ypom + 22),
                                    QPoint(xpom + 16, ypom + 32), QPoint(xpom, ypom + 22), QPoint(xpom, ypom + 10)])
-                self.scene.addPolygon(points,
-                                      QPen(Qt.black, 4, Qt.SolidLine), QBrush())
+                self.scene.addPolygon(points,QPen(Qt.black,4,Qt.SolidLine), QBrush())
+                if self.engine.isSet:
+                    x = self.engine.board.hexagonslist[self.engine.setsetPy][self.engine.setsetPx].x
+                    y = self.engine.board.hexagonslist[self.engine.setsetPy][self.engine.setsetPx].y
+                    xpom = x * 8
+                    ypom = y * 8
+                    points = QPolygonF([QPoint(xpom + 16, ypom), QPoint(xpom + 32, ypom + 10), QPoint(xpom + 32, ypom + 22),
+                                       QPoint(xpom + 16, ypom + 32), QPoint(xpom, ypom + 22), QPoint(xpom, ypom + 10)])
+                    self.scene.addPolygon(points,
+                                          QPen(Qt.black, 4, Qt.SolidLine), QBrush())
 
 
     def getColour(self,j):
@@ -160,28 +223,30 @@ class Window(QWidget):
             return Qt.black
 
     def gameLoop(self):
-        isSettling, isPlayer1, score = self.engine.game()
-        if isSettling:
-            self.timer.setInterval(600)
-        else:
-            self.timer.setInterval(50)
-            self.wasFirstSettling = True
-        if self.wasFirstSettling:
-            if self.is2PlayerMode:
-                if isPlayer1:   self.player1score+=score
-                else: self.player2score += score
-            else: self.player1score += score
-            self.labelplayer1.setText(f"PLAYER 1 SCORE : {self.player1score}   ")
-            self.labelplayer2.setText(f"PlAYER 2 SCORE : {self.player2score}    ")
-            if self.is2PlayerMode:
-                if isPlayer1:
-                    self.labelplayer2.setStyleSheet('color: red')
-                    self.labelplayer1.setStyleSheet('color: black')
-                else :
-                    self.labelplayer1.setStyleSheet('color: red')
-                    self.labelplayer2.setStyleSheet('color: black')
-            self.labelplayer1.update()
-            self.labelplayer2.update()
+        print(self.isEnemyTurn)
+        if not self.isEnemyTurn:
+            isSettling, isPlayer1, score = self.engine.game()
+            if isSettling:
+                self.timer.setInterval(600)
+            else:
+                self.timer.setInterval(50)
+                self.wasFirstSettling = True
+            if self.wasFirstSettling:
+                if self.is2PlayerMode:
+                    if isPlayer1:   self.player1score+=score
+                    else: self.player2score += score
+                else: self.player1score += score
+                self.labelplayer1.setText(f"PLAYER 1 SCORE : {self.player1score}   ")
+                self.labelplayer2.setText(f"PlAYER 2 SCORE : {self.player2score}    ")
+                if self.is2PlayerMode:
+                    if isPlayer1:
+                        self.labelplayer2.setStyleSheet('color: red')
+                        self.labelplayer1.setStyleSheet('color: black')
+                    else :
+                        self.labelplayer1.setStyleSheet('color: red')
+                        self.labelplayer2.setStyleSheet('color: black')
+                self.labelplayer1.update()
+                self.labelplayer2.update()
 
         self.paint()
         
