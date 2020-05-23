@@ -117,7 +117,7 @@ class Window(QWidget):
     def recieveBoard(self, isEnemy, board):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        server_address = ('localhost', 10061)
+        server_address = (socket.gethostname(), 10061)
         sock.bind(server_address)
         sock.listen(1)
 
@@ -223,7 +223,6 @@ class Window(QWidget):
             return Qt.black
 
     def gameLoop(self):
-        print(self.isEnemyTurn)
         if not self.isEnemyTurn:
             isSettling, isPlayer1, score = self.engine.game()
             if isSettling:
