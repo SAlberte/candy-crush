@@ -13,12 +13,16 @@ class Window(QWidget):
         super().__init__()
         self.setWindowTitle("Candy Crush")
         self.setGeometry(300, 300, 900, 600)
+        self.canIMove = True
         self.setMinimumHeight(600)
         self.setMinimumWidth(600)
         self.scene = QGraphicsScene()
         self.view = QGraphicsView(self.scene,self)
         self.view.setGeometry(130, 10, 700, 400)
         self.isGame = False
+        self.isGameOnline = False
+        self.isSettlingStart = False
+        self.shouldcreateRoom = False
         self.is2PlayerMode = False
         self.wasFirstSettling = False
         self.player1score = 0
@@ -76,14 +80,14 @@ class Window(QWidget):
         self.btnjoin.setAutoDefault(False)
         self.btnjoin.setStyleSheet("background-color: #66ffff")
         self.btnjoin.move(20, 250)
-        self.btnjoin.clicked.connect(self.joinRoom)
+        self.btnjoin.clicked.connect(self.createEngineandJoin)
 
         # button to create room for online player
         self.btnjoin = QPushButton("CREATE ROOM", self)
         self.btnjoin.setAutoDefault(False)
         self.btnjoin.setStyleSheet("background-color: #66ffff")
         self.btnjoin.move(20, 300)
-        self.btnjoin.clicked.connect(self.createRoom)
+        self.btnjoin.clicked.connect(self.createEngineAndMap)
        
     def createRoom(self):
         self.isEnemyTurn = True
@@ -109,6 +113,7 @@ class Window(QWidget):
             message = pickle.dumps(n)
             # print('sending {!r}'.format(message))
             sock.send(message)
+            self.canIMove = False
 
         finally:
             print('closing socket')
@@ -117,7 +122,7 @@ class Window(QWidget):
     def recieveBoard(self, isEnemy, board):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        server_address = (socket.gethostname(), 10061)
+        server_address = ("0.0.0.0", 10061)
         sock.bind(server_address)
         sock.listen(1)
 
@@ -143,27 +148,36 @@ class Window(QWidget):
             print("Closing current connectoin")
             connection.close()
             self.isEnemyTurn = False
+            self.canIMove = True
 
     def quitApp(self):
         myApp.quit()
 
     def StartGame(self):
+        self.canIMove = True
         self.labelplayer1.setText("PLAYER 1 SCORE : ")
         self.labelplayer2.setText("PLAYER 2 SCORE : ")
+        self.isSettlingStart = False
         self.is2PlayerMode = False
         self.wasFirstSettling = False
+        self.shouldcreateRoom = False
         self.player1score = 0
         self.player2score = 0
         #self.repaint()
         #self.show()
         self.btnstart.setText("NEW GAME")
         self.isGame = True
+        self.isGameOnline = False
         self.engine = Engine()
         self.timer.start()
 
     def player2StartGame(self):
         self.labelplayer1.setText("PLAYER 1 SCORE : ")
         self.labelplayer2.setText("PLAYER 2 SCORE : ")
+        self.isSettlingStart = False
+        self.shouldcreateRoom = False
+        self.isGameOnline = False
+        self.canIMove = True
         self.is2PlayerMode = True
         self.wasFirstSettling = False
         self.player1score = 0
@@ -172,6 +186,50 @@ class Window(QWidget):
         self.btnstart.setText("NEW GAME")
         self.isGame = True
         self.engine = Engine()
+        self.timer.start()
+
+    def createEngineAndMap(self):
+        self.labelplayer1.setText("PLAYER 1 SCORE : ")
+        self.labelplayer2.setText("PLAYER 2 SCORE : ")
+        self.is2PlayerMode = False
+        self.shouldcreateRoom = False
+        self.wasFirstSettling = False
+        self.isSettlingStart = False
+        self.player1score = 0
+        self.player2score = 0
+        self.btnstart.setText("NEW GAME")
+        self.isGame = True
+        self.engine = Engine()
+        while not self.wasFirstSettling:
+            isSettling, isPlayer1, score = self.engine.game()
+            if not isSettling:
+                self.wasFirstSettling = True
+        self.isGameOnline = True
+        self.createRoom()
+        self.timer.start()
+
+    def createEngineandJoin(self):
+        self.labelplayer1.setText("PLAYER 1 SCORE : ")
+        self.labelplayer2.setText("PLAYER 2 SCORE : ")
+        self.isSettlingStart = False
+        self.shouldcreateRoom = False
+        self.is2PlayerMode = False
+        self.wasFirstSettling = False
+        self.player1score = 0
+        self.player2score = 0
+        self.btnstart.setText("NEW GAME")
+        self.isGame = True
+        self.engine = Engine()
+        while (not self.wasFirstSettling):
+            isSettling, isPlayer1, score = self.engine.game()
+            if not isSettling:
+                self.wasFirstSettling = True
+        self.joinRoom()
+        self.isEnemyTurn = False
+        self.paint()
+        self.canIMove = False
+        self.createRoom()
+        self.isGameOnline = True
         self.timer.start()
 
 
@@ -223,11 +281,20 @@ class Window(QWidget):
             return Qt.black
 
     def gameLoop(self):
-        if not self.isEnemyTurn:
+        if self.isGameOnline and self.shouldcreateRoom:
+            self.shouldcreateRoom = False
+            self.createRoom()
+        if not self.isEnemyTurn and self.canIMove:
             isSettling, isPlayer1, score = self.engine.game()
             if isSettling:
                 self.timer.setInterval(600)
+                if self.isGameOnline:
+                    self.isSettlingStart = True
             else:
+                if self.isSettlingStart and self.isGameOnline:
+                    self.isSettlingStart = False
+                    self.joinRoom()
+                    self.shouldcreateRoom = True
                 self.timer.setInterval(50)
                 self.wasFirstSettling = True
             if self.wasFirstSettling:
@@ -246,7 +313,6 @@ class Window(QWidget):
                         self.labelplayer2.setStyleSheet('color: black')
                 self.labelplayer1.update()
                 self.labelplayer2.update()
-
         self.paint()
         
 
