@@ -25,6 +25,7 @@ class Window(QWidget):
         self.shouldcreateRoom = False
         self.is2PlayerMode = False
         self.wasFirstSettling = False
+        self.shouldCloseSocket = False
         self.player1score = 0
         self.player2score = 0
         self.timer = QTimer(self)
@@ -34,6 +35,7 @@ class Window(QWidget):
         self.setLabel()
         self.setButtons()
         self.isEnemyTurn = False
+
         self.enemyIP = 0
 
     def setLabel(self):
@@ -91,8 +93,8 @@ class Window(QWidget):
        
     def createRoom(self):
         self.isEnemyTurn = True
-        t = threading.Thread(target=self.recieveBoard,args=(self.isEnemyTurn, self.engine.board.hexagonslist,))
-        t.start()
+        self.t = threading.Thread(target=self.recieveBoard,args=(self.isEnemyTurn, self.engine.board.hexagonslist,))
+        self.t.start()
         #t.join()
 
     def joinRoom(self):
@@ -110,7 +112,7 @@ class Window(QWidget):
             # Send data
             # message = b"This is our message. It is very long but will only be transmitted in chunks of 16 at a time"
             n = self.engine.board.hexagonslist
-            message = pickle.dumps(n)
+            message = pickle.dumps([n, self.player1score])
             # print('sending {!r}'.format(message))
             sock.send(message)
             self.canIMove = False
@@ -133,10 +135,15 @@ class Window(QWidget):
             print("connection from", client_address)
 
             while True:
+                if self.shouldCloseSocket:
+                    self.shouldCloseSocket = False
+                    self.isEnemyTurn = False
+                    self.canIMove = True
+                    break
                 data = connection.recv(100000)
 
                 if data:
-                    self.engine.board.hexagonslist = pickle.loads(data)
+                    self.engine.board.hexagonslist, self.player2score = pickle.loads(data)
                     print("odebrano mape")
                 else:
                     print("skonczono odbierac mape", client_address)
@@ -151,10 +158,16 @@ class Window(QWidget):
             self.canIMove = True
 
     def quitApp(self):
+        self.shouldCloseSocket = True
         myApp.quit()
+
+
+
+
 
     def StartGame(self):
         self.canIMove = True
+        self.shouldCloseSocket = True
         self.labelplayer1.setText("PLAYER 1 SCORE : ")
         self.labelplayer2.setText("PLAYER 2 SCORE : ")
         self.isSettlingStart = False
@@ -174,6 +187,7 @@ class Window(QWidget):
     def player2StartGame(self):
         self.labelplayer1.setText("PLAYER 1 SCORE : ")
         self.labelplayer2.setText("PLAYER 2 SCORE : ")
+        self.shouldCloseSocket = True
         self.isSettlingStart = False
         self.shouldcreateRoom = False
         self.isGameOnline = False
