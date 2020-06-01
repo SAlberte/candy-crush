@@ -5,6 +5,7 @@ from PySide2.QtCore import *
 import threading
 import socket
 import pickle
+import os
 import sys
 
 class Window(QWidget):
@@ -125,21 +126,29 @@ class Window(QWidget):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         server_address = ("0.0.0.0", 10061)
+
+        sock.settimeout(0.5)
         sock.bind(server_address)
-        sock.listen(1)
-
-
         print("waiting for connection")
-        connection, client_address = sock.accept()
+        while True:
+
+            sock.listen(1)
+            if self.shouldCloseSocket:
+                self.shouldCloseSocket = False
+                self.isEnemyTurn = False
+                self.canIMove = True
+                break
+            try:
+                connection, client_address = sock.accept()
+            except:
+                pass
+            else: break
+
         try:
             print("connection from", client_address)
 
             while True:
-                if self.shouldCloseSocket:
-                    self.shouldCloseSocket = False
-                    self.isEnemyTurn = False
-                    self.canIMove = True
-                    break
+
                 data = connection.recv(100000)
 
                 if data:
@@ -338,4 +347,4 @@ window.show()
 
 
 myApp.exec_()
-sys.exit(0)
+os._exit(0)
