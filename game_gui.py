@@ -41,7 +41,7 @@ class Window(QWidget):
         self.timer.setInterval(50)
         self.replayTimer = QTimer(self)
         self.replayTimer.timeout.connect(self.replayLoop)
-        self.replayTimer.setInterval(350)
+        self.replayTimer.setInterval(200)
         self.setTextBox()
         self.setLabel()
         self.setButtons()
@@ -172,16 +172,19 @@ class Window(QWidget):
 
     def playReplay(self):
         if os.path.exists("history.xml"):
+            self.shouldCloseSocket = True
+            self.isEnemyTurn = False
             self.isGameOnline = False
             self.timer.stop()
             self.engine = Engine()
             self.replayActualN = 0
             self.isGame = True
+            self.replayN = len(ET.parse('history.xml').getroot().getchildren())
             self.replayTimer.start()
 
 
     def replayLoop(self):
-        if self.replayActualN == self.replayN-1:
+        if self.replayActualN >= self.replayN-1:
             print("koniec")
             self.replayTimer.stop()
             return
@@ -282,8 +285,6 @@ class Window(QWidget):
 
     def quitApp(self):
         self.shouldCloseSocket = True
-        with open('data.json', 'w') as outfile:
-            outfile.write(json.dumps([ob.__dict__ for ob in self.engine.board.hexagonslist]))
         myApp.quit()
 
     def StartGame(self):
@@ -426,7 +427,7 @@ class Window(QWidget):
 
     def gameLoop(self):
 
-        if self.IteratorTimer >= 5 and (not self.isGameOnline and not self.isEnemyTurn):
+        if self.IteratorTimer >= 4 and not self.isEnemyTurn:
             self.createXML()
             self.IteratorTimer = 0
         else:
